@@ -1,0 +1,28 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Paso 1: Construir el APK
+      - name: Build APK
+        uses: digreatbrian/buildozer-action@v2
+        with:
+          python-version: 3.11
+          buildozer-cmd: |
+            export BUILDOZER_ALLOW_ORG_TEST_DOMAIN=1 
+            buildozer -v android debug
+
+      # Paso 2: Subir el APK sin firmar
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Botsito-APK
+          path: ./bin/*.apk
