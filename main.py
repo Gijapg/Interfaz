@@ -273,7 +273,7 @@ class SignupScreen(Screen):
 
         # Input para el usuario
         self.username_input = TextInput(
-            hint_text="Correo electronico",
+            hint_text="username",
             size_hint=(1, None),
             height=Window.height * 0.10,  # 10% de la altura de la pantalla
             background_color=(1, 1, 1, 1),  # Blanco puro
@@ -454,7 +454,7 @@ class AccountDetailsScreen(Screen):
         # Llamada al servidor para actualizar detalles
         url = f"{ip}/update_account"
         data = {
-            "Correo electronico": username,
+            "username": username,
             "account_id": account_id,
             "account_password": account_password,
             "server": server,
