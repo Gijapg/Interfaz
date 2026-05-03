@@ -15,7 +15,7 @@ from kivy.uix.widget import Widget
 from kivy.clock import Clock
 
 
-interval = 5  # Intervalo en segundos para verificar el estado del bot
+interval = 5
 #ip_antigua = "http://209.105.239.193:80"
 ip = "http://38.247.140.62:80"
 token = None
@@ -25,15 +25,13 @@ def register_user(username, password):
     data = {"username": username, "password": password}
     response = requests.post(url, json=data, timeout=30)
     if response.status_code == 201:
-        # Verifica si la respuesta tiene un 'status' igual a 'success'
         response_data = response.json()
         if response_data.get("status") == "success":
             print("Registro exitoso:", response_data["username"])
-            return True, response_data["username"]  # Retorna éxito y username
+            return True, response_data["username"] 
     else:
-        # Si hay un error, se imprime el mensaje de error desde el backend
         print("Error en el registro:", response.json().get("message"))
-    return False, ""  # Retorna False si no fue exitoso
+    return False, ""  
 
 def load_session():
     try:
@@ -45,7 +43,6 @@ def load_session():
         return None, None
 
 def check_session():
-    """Verifica si el usuario ya está logueado usando una llamada al backend con JWT."""
     token, username = load_session()
     if not token:
         print("No hay token disponible.")
@@ -56,7 +53,7 @@ def check_session():
     headers = {"Authorization": token}
     try:
         response = requests.get(f'{ip}/check_session', headers=headers, timeout=30)  
-        print(f"Response Status Code: {response.status_code}")  # Imprime el código de estado de la respuesta
+        print(f"Response Status Code: {response.status_code}")  
         
         if response.status_code == 200:
             session_data = response.json()
@@ -65,7 +62,6 @@ def check_session():
             return username
         
         elif response.status_code == 401:
-            # Token inválido o expirado
             error_message = response.json().get("message", "Error desconocido")
             print(f"Error: {error_message}")
             return None
@@ -79,7 +75,6 @@ def check_session():
         return None
 
 def clear_session():
-    """Elimina la sesión de JWT mediante una llamada al backend."""
     archivo = "session_data.json"
     if os.path.exists(archivo):
         os.remove(archivo)
@@ -101,7 +96,6 @@ def save_session(token, username):
     with open('session_data.json', 'w') as file:
         json.dump(session_data, file)
 
-# Funciones para manejar el bot en el VPS
 def start_bot_vps():
     try:
         response = requests.post(f'{ip}/start_bot', timeout=30)
@@ -136,13 +130,11 @@ class LoginScreen(Screen):
             spacing=15,
         )
 
-        # Fondo de la pantalla
         with self.canvas.before:
             self.bg_color = Color(0.9, 0.95, 1, 1)
             self.bg_rect = Rectangle(size=self.size, pos=self.pos)
         self.bind(size=self.update_background, pos=self.update_background)
 
-        # Título estilizado
         self.label = Label(
             text="[b]Iniciar Sesión[/b]",
             font_size=28,
@@ -151,7 +143,6 @@ class LoginScreen(Screen):
         )
         self.layout.add_widget(self.label)
 
-        # Campo de usuario estilizado
         self.username_input = TextInput(
             hint_text="username",
             size_hint=(1, None),
@@ -163,7 +154,6 @@ class LoginScreen(Screen):
         )
         self.layout.add_widget(self.username_input)
 
-        # Campo de contraseña estilizado
         self.password_input = TextInput(
             hint_text="Contraseña",
             password=True,
@@ -176,7 +166,6 @@ class LoginScreen(Screen):
         )
         self.layout.add_widget(self.password_input)
 
-        # Botón de inicio de sesión
         self.login_button = Button(
             text="Iniciar Sesión",
             size_hint=(1, None),
@@ -190,7 +179,6 @@ class LoginScreen(Screen):
         self.login_button.bind(on_press=self.verify_credentials)
         self.layout.add_widget(self.login_button)
 
-        # Botón de registrarse
         self.signup_button = Button(
             text="Registrarse",
             size_hint=(1, None),
@@ -220,25 +208,21 @@ class LoginScreen(Screen):
 
         response = requests.post(f'{ip}/login', json={"username": username, "password": password})
 
-        # Verificar si la respuesta es exitosa
         if response.status_code == 200:
-            # Obtener el token desde la respuesta JSON
-            response_data = response.json()  # Parsear la respuesta JSON
-            token = response_data.get("token")  # Obtener el token
+            response_data = response.json()  
+            token = response_data.get("token")  
 
             if token:
                 print(f'TOKEEEEEEEN: {token}')
                 token = token
-                # Aquí podrías hacer algo más con el token, como guardarlo para futuras peticiones
                 save_session(token, username)
-                self.manager.current = "verify_credentials"  # Cambiar la pantalla
+                self.manager.current = "verify_credentials"  
                 
             else:
                 print("No se recibió el token")
                 error_message = "No se recibió el token."
                 self.label.text = f"[color=#FF0000]Error: {error_message}[/color]"
         else:
-            # Si el login no es exitoso, mostrar el mensaje de error
             error_message = response.json().get("message", "Error desconocido")
             self.label.text = f"[color=#FF0000]Error: {error_message}[/color]"
 
@@ -250,79 +234,71 @@ class SignupScreen(Screen):
         super().__init__(**kwargs)
         self.layout = BoxLayout(
             orientation='vertical',
-            padding=[20, 50, 20, 20],  # Espaciado: izquierda, arriba, derecha, abajo
+            padding=[20, 50, 20, 20], 
             spacing=15,
         )
 
-        # Agregar un fondo de color al layout
         with self.layout.canvas.before:
-            self.bg_color = Color(rgba=(0.9, 0.95, 1, 1))  # Color claro
+            self.bg_color = Color(rgba=(0.9, 0.95, 1, 1))  
             self.bg_rect = Rectangle(size=self.layout.size, pos=self.layout.pos)
 
-        # Actualizar el fondo cuando cambien el tamaño o la posición
         self.layout.bind(size=self.update_background, pos=self.update_background)
 
-        # Título estilizado
         self.label = Label(
             text="[b]Registrarse[/b]",
             font_size=28,
-            markup=True,  # Activar etiquetas BBCode
-            color=(0, 0.2, 0.5, 1),  # Azul oscuro
+            markup=True,  
+            color=(0, 0.2, 0.5, 1), 
         )
         self.layout.add_widget(self.label)
 
-        # Input para el usuario
         self.username_input = TextInput(
             hint_text="username",
             size_hint=(1, None),
-            height=Window.height * 0.10,  # 10% de la altura de la pantalla
-            background_color=(1, 1, 1, 1),  # Blanco puro
-            foreground_color=(0, 0, 0, 1),  # Negro
+            height=Window.height * 0.10,  
+            background_color=(1, 1, 1, 1),  
+            foreground_color=(0, 0, 0, 1),  
             padding=[10, 10],
         )
         self.layout.add_widget(self.username_input)
 
-        # Input para la contraseña
         self.password_input = TextInput(
             hint_text="Contraseña",
             password=True,
             size_hint=(1, None),
-            height=Window.height * 0.10,  # 10% de la altura de la pantalla
+            height=Window.height * 0.10,  
             background_color=(1, 1, 1, 1),
             foreground_color=(0, 0, 0, 1),
             padding=[10, 10],
         )
         self.layout.add_widget(self.password_input)
 
-        # Botón de registro
         self.signup_button = Button(
             text="Registrarse",
             size_hint=(1, None),
-            height=Window.height * 0.15,  # 10% de la altura de la pantalla
+            height=Window.height * 0.15,  
             background_normal="",
-            background_color=(0.2, 0.6, 0.9, 1),  # Azul claro
-            color=(1, 1, 1, 1),  # Texto blanco
+            background_color=(0.2, 0.6, 0.9, 1),  
+            color=(1, 1, 1, 1),  
             font_size=18,
             bold=True,
         )
         self.signup_button.bind(on_press=self.register_user)
         self.layout.add_widget(self.signup_button)
 
-        # Botón de volver
         self.back_button = Button(
             text="Volver",
             size_hint=(1, None),
-            height=Window.height * 0.15,  # 10% de la altura de la pantalla
+            height=Window.height * 0.15,  
             background_normal="",
-            background_color=(0.9, 0.2, 0.2, 1),  # Rojo claro
-            color=(1, 1, 1, 1),  # Texto blanco
+            background_color=(0.9, 0.2, 0.2, 1),  
+            color=(1, 1, 1, 1), 
             font_size=18,
             bold=True,
         )
         self.back_button.bind(on_press=self.go_to_login)
         self.layout.add_widget(self.back_button)
 
-        # Agregar layout principal a la pantalla
         self.add_widget(self.layout)
 
     def update_background(self, instance, value):
@@ -335,12 +311,11 @@ class SignupScreen(Screen):
     def register_user(self, instance):
         username = self.username_input.text
         password = self.password_input.text
-        success, username = register_user(username, password)  # Captura el resultado y el username
+        success, username = register_user(username, password) 
 
         if success:
-            # Si el registro es exitoso, guarda el username en el ScreenManager
-            self.manager.get_screen("update_account_details").set_username(username)  # Llama a un método para asignar el username
-            self.manager.current = "update_account_details"  # Redirigir a la pantalla de detalles de la cuenta
+            self.manager.get_screen("update_account_details").set_username(username)  
+            self.manager.current = "update_account_details"  
         else:
             self.label.text = "[color=#FF0000][b]El usuario ya existe. Inténtelo con nombre.[/b][/color]"
 
@@ -349,37 +324,32 @@ class SignupScreen(Screen):
 class AccountDetailsScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.username = None  # Inicialización de la variable
+        self.username = None  
 
-        # Fondo personalizado
         with self.canvas.before:
-            Color(0.94, 0.96, 0.98, 1)  # Azul claro
+            Color(0.94, 0.96, 0.98, 1) 
             self.rect = Rectangle(size=self.size, pos=self.pos)
         self.bind(size=self._update_rect, pos=self._update_rect)
 
-        # Contenedor principal
         main_layout = BoxLayout(orientation='vertical')
 
-        # Subcontenedor con alineación y estilo
         layout = BoxLayout(
             orientation='vertical',
-            padding=[40, 80, 40, 40],  # Márgenes alrededor
+            padding=[40, 80, 40, 40],  
             spacing=20,
             size_hint=(1, None),
-            height=600,  # Altura total del contenido
+            height=600,  
         )
-        layout.bind(minimum_height=layout.setter('height'))  # Ajusta la altura según el contenido
+        layout.bind(minimum_height=layout.setter('height'))  
 
-        # Título estilizado
         title = Label(
             text="[b]Detalles de la Cuenta[/b]",
             font_size=28,
-            markup=True,  # Activar etiquetas BBCode
-            color=(0, 0.2, 0.5, 1),  # Azul oscuro
+            markup=True,  
+            color=(0, 0.2, 0.5, 1),  
         )
         layout.add_widget(title)
 
-        # Campos de entrada estilizados
         layout.add_widget(self._create_label("ID de Cuenta:"))
         self.account_id_input = self._create_text_input()
         layout.add_widget(self.account_id_input)
@@ -392,21 +362,19 @@ class AccountDetailsScreen(Screen):
         self.server_input = self._create_text_input()
         layout.add_widget(self.server_input)
 
-        # Botón estilizado para guardar
         save_button = Button(
             text="Guardar",
             size_hint=(1, None),
-            height=Window.height * 0.15,  # 10% de la altura de la pantalla
+            height=Window.height * 0.15,  
             background_normal="",
-            background_color=(0.2, 0.6, 0.8, 1),  # Azul brillante
-            color=(1, 1, 1, 1),  # Texto blanco
+            background_color=(0.2, 0.6, 0.8, 1), 
+            color=(1, 1, 1, 1),  
             font_size=20,
             bold=True,
         )
         save_button.bind(on_press=self.update_account_details)
         layout.add_widget(save_button)
 
-        # Contenedor con ScrollView para manejar pantallas pequeñas
         scroll_view = ScrollView(size_hint=(1, 1))
         scroll_view.add_widget(layout)
         main_layout.add_widget(scroll_view)
@@ -414,25 +382,23 @@ class AccountDetailsScreen(Screen):
         self.add_widget(main_layout)
 
     def _create_label(self, text):
-        """Crea un label estilizado."""
         return Label(
             text=text,
             font_size=18,
             size_hint_y=None,
-            height=30,  # Altura fija
-            color=(0, 0, 0, 1),  # Negro
+            height=30,  
+            color=(0, 0, 0, 1), 
         )
 
     def _create_text_input(self, password=False):
-        """Crea un campo de entrada estilizado."""
         return TextInput(
             multiline=False,
             password=password,
             size_hint_y=None,
-            height=Window.height * 0.10,  # 10% de la altura de la pantalla
-            background_color=(1, 1, 1, 1),  # Fondo blanco
-            foreground_color=(0, 0, 0, 1),  # Texto negro
-            cursor_color=(0.2, 0.6, 0.8, 1),  # Cursor azul
+            height=Window.height * 0.10, 
+            background_color=(1, 1, 1, 1),  
+            foreground_color=(0, 0, 0, 1),  
+            cursor_color=(0.2, 0.6, 0.8, 1), 
             padding=[10, 10],
         )
 
@@ -441,7 +407,6 @@ class AccountDetailsScreen(Screen):
         print(f"Username recibido en AccountDetailsScreen: {self.username}")
 
     def update_account_details(self, instance):
-        """Actualiza los detalles de la cuenta en el servidor."""
         username = self.username
         account_id = self.account_id_input.text
         account_password = self.account_password_input.text
@@ -451,7 +416,6 @@ class AccountDetailsScreen(Screen):
             print("Faltan datos")
             return
 
-        # Llamada al servidor para actualizar detalles
         url = f"{ip}/update_account"
         data = {
             "username": username,
@@ -470,7 +434,6 @@ class AccountDetailsScreen(Screen):
             print(f"Error en la conexión: {e}")
 
     def _update_rect(self, *args):
-        """Actualiza el fondo dinámicamente."""
         self.rect.pos = self.pos
         self.rect.size = self.size
 
@@ -480,33 +443,29 @@ class VerifyCredentialsScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        # Fondo personalizado
         with self.canvas.before:
-            Color(0.9, 0.95, 1, 1)  # Fondo color claro
+            Color(0.9, 0.95, 1, 1)  
             self.bg_rect = Rectangle(size=self.size, pos=self.pos)
         self.bind(size=self._update_bg, pos=self._update_bg)
 
-        # Layout principal (ScrollView para manejar pantallas más pequeñas)
         scroll_view = ScrollView()
         main_layout = BoxLayout(orientation='vertical', padding=20, spacing=20, size_hint_y=None)
         main_layout.bind(minimum_height=main_layout.setter('height'))
         scroll_view.add_widget(main_layout)
 
-        # Título estilizado
         title_label = Label(
             text="[b]Verifica tus credenciales[/b]",
             font_size=28,
-            markup=True,  # Activar etiquetas BBCode
-            color=(0, 0.2, 0.5, 1),  # Azul oscuro
+            markup=True,  
+            color=(0, 0.2, 0.5, 1),  
         )
         title_label.bind(size=self._update_text)
         main_layout.add_widget(title_label)
 
-        # Campo de entrada para el nombre de usuario
         self.username_input = TextInput(
             hint_text="Ingresa tu usuario",
             size_hint=(1, None),
-            height=Window.height * 0.10,  # 10% de la altura de la pantalla
+            height=Window.height * 0.10, 
             multiline=False,
             background_color=(1, 1, 1, 1),
             foreground_color=(0, 0, 0, 1),
@@ -515,12 +474,11 @@ class VerifyCredentialsScreen(Screen):
         )
         main_layout.add_widget(self.username_input)
 
-        # Campo de entrada para la contraseña
         self.password_input = TextInput(
             hint_text="Ingresa contraseña de la cuenta de trading",
             password=True,
             size_hint=(1, None),
-            height=Window.height * 0.10,  # 10% de la altura de la pantalla
+            height=Window.height * 0.10,  
             multiline=False,
             background_color=(1, 1, 1, 1),
             foreground_color=(0, 0, 0, 1),
@@ -529,11 +487,10 @@ class VerifyCredentialsScreen(Screen):
         )
         main_layout.add_widget(self.password_input)
 
-        # Botón de envío
         submit_button = Button(
             text="Verificar",
             size_hint=(1, None),
-            height=Window.height * 0.15,  # 10% de la altura de la pantalla
+            height=Window.height * 0.15, 
             background_normal="",
             background_color=(0, 0.5, 1, 1),
             color=(1, 1, 1, 1),
@@ -543,7 +500,6 @@ class VerifyCredentialsScreen(Screen):
         submit_button.bind(on_press=self.submit_credentials)
         main_layout.add_widget(submit_button)
 
-        # Campo de respuesta
         self.response_label = TextInput(
             readonly=True,
             multiline=True,
@@ -557,7 +513,6 @@ class VerifyCredentialsScreen(Screen):
         )
         main_layout.add_widget(self.response_label)
 
-        # Añadimos el ScrollView al Screen
         self.add_widget(scroll_view)
 
     def submit_credentials(self, instance):
@@ -571,7 +526,7 @@ class VerifyCredentialsScreen(Screen):
             )
             if response.status_code == 200:
                 self.response_label.text = response.json().get("message", "Success!")
-                self.manager.current = "main"  # Cambiar a la pantalla principal
+                self.manager.current = "main"  
             else:
                 self.response_label.text = response.json().get("message", "Login failed.")
         except requests.exceptions.RequestException as e:
@@ -589,100 +544,88 @@ class MainScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        # Fondo de pantalla
         with self.canvas.before:
-            Color(0.8, 0.9, 1, 1)  # Fondo azul claro
+            Color(0.8, 0.9, 1, 1)  
             self.rect = Rectangle(size=self.size, pos=self.pos)
         self.bind(size=self._update_rect, pos=self._update_rect)
 
-        # Layout principal
         self.layout = BoxLayout(orientation='vertical', padding=20, spacing=15)
-        self.layout.add_widget(Widget(size_hint_y=0.6))  # Espaciador para empujar los elementos hacia abajo
+        self.layout.add_widget(Widget(size_hint_y=0.6))  
 
-        # Botón de iniciar el bot
         self.start_button = Button(
             text='Iniciar Bot',
             size_hint=(1, None),
-            height=Window.height * 0.15,  # 10% de la altura de la pantalla
+            height=Window.height * 0.15, 
             background_color=(0, 0.7, 0.2, 1),
             font_size=16
         )
         self.start_button.bind(on_press=self.start_bot)
         self.layout.add_widget(self.start_button)
 
-        # Botón de detener el bot
         self.stop_button = Button(
             text='Detener Bot',
             size_hint=(1, None),
-            height=Window.height * 0.15,  # 10% de la altura de la pantalla
+            height=Window.height * 0.15,  
             background_color=(0.8, 0, 0, 1),
             font_size=16
         )
         self.stop_button.bind(on_press=self.stop_bot)
         self.layout.add_widget(self.stop_button)
 
-        # Etiqueta de estado
         self.status_label = Label(
             text='Estado: Desconocido',
             size_hint=(1, None),
-            height=Window.height * 0.10,  # 10% de la altura de la pantalla
+            height=Window.height * 0.10,  
             font_size=16,
             color=(0, 0, 0, 1)
         )
         self.layout.add_widget(self.status_label)
 
-        # Cuadro de texto para mensajes del backend
         self.backend_messages = TextInput(
             hint_text='Mensajes del backend aparecerán aquí...',
             size_hint=(1, 0.3),
-            height=Window.height * 0.35,  # 10% de la altura de la pantalla
+            height=Window.height * 0.35,  
             readonly=True,
-            background_color=(0.95, 0.95, 0.95, 1),  # Color de fondo claro
+            background_color=(0.95, 0.95, 0.95, 1), 
             font_size=14,
-            foreground_color=(0, 0, 0, 1),  # Texto negro
-            text_validate_unfocus=False  # No quitar foco al escribir
+            foreground_color=(0, 0, 0, 1),  
+            text_validate_unfocus=False  
         )
         self.layout.add_widget(self.backend_messages)
 
-        # Botón para cerrar sesión
         self.logout_button = Button(
             text="Cerrar Sesión",
             size_hint=(1, None),
-            height=Window.height * 0.15,  # 10% de la altura de la pantalla
+            height=Window.height * 0.15, 
             background_color=(0.3, 0.3, 0.8, 1),
             font_size=16
         )
         self.logout_button.bind(on_press=self.logout)
         self.layout.add_widget(self.logout_button)
 
-        # Botón de suscripción
         self.subscribe_button = Button(
             text="Suscribirse",
             size_hint=(1, None),
             height=Window.height * 0.15,
             background_normal="",
-            background_color=(1, 0.6, 0, 1),  # Naranja
-            color=(1, 1, 1, 1),  # Texto en blanco
+            background_color=(1, 0.6, 0, 1), 
+            color=(1, 1, 1, 1),  
             font_size=18,
             bold=True
         )
         self.subscribe_button.bind(on_press=self.open_subscription_page)
         self.layout.add_widget(self.subscribe_button)
 
-        # Añadimos el layout a la pantalla
         self.add_widget(self.layout)
 
-        # Inicialización de update_event
-        self.update_event = None  # Inicializar la variable
+        self.update_event = None  
 
     def logout(self, instance):
-        """Enviar solicitud para cerrar sesión."""
         try:
             response = requests.post(f'{ip}/logout', timeout=10)
             if response.status_code == 200:
                 print("Sesión cerrada correctamente.")
                 clear_session()
-                # Redirigir al usuario a la pantalla de inicio de sesión
                 self.manager.current = "login"
             else:
                 self.update_backend_message("Error al cerrar sesión: " + response.text)
@@ -694,7 +637,6 @@ class MainScreen(Screen):
             self.status_label.text = 'Estado: En ejecución'
             self.update_backend_message("Bot iniciado correctamente.")
 
-            # Iniciar actualización de operaciones si no está programado ya
             if not self.update_event:
                 self.update_event = Clock.schedule_interval(self.display_operations, 5)
         else:
@@ -706,7 +648,6 @@ class MainScreen(Screen):
             self.status_label.text = 'Estado: Detenido'
             self.update_backend_message("Bot detenido correctamente.")
 
-            # Detener la actualización de operaciones
             if self.update_event:
                 Clock.unschedule(self.update_event)
                 self.update_event = None
@@ -715,7 +656,6 @@ class MainScreen(Screen):
             self.update_backend_message("Error al detener el bot.")
 
     def update_backend_message(self, message):
-        """Actualiza el cuadro de texto de los mensajes del backend"""
         self.backend_messages.text += f"\n{message}"
 
     def update_status(self, dt):
@@ -729,56 +669,45 @@ class MainScreen(Screen):
         self.rect.size = self.size 
 
     def add_message(self, message):
-        """Agregar un mensaje al cuadro de texto"""
-        self.backend_messages.text = message  # Añadir el nuevo mensaje al final
+        self.backend_messages.text = message  
 
     def get_operations_from_api(self):
-        """Obtener los mensajes de operaciones como texto plano"""
         try:
             response = requests.get(f'{ip}/get_operations', timeout=30)
             if response.status_code == 200:
                 print(f'MENSAJES: {response.text}')
-                return response.text  # Obtener el texto plano directamente
+                return response.text  
             else:
                 return "Hubo un problema con la solicitud."
         except requests.exceptions.RequestException as e:
             return f"Hubo un problema: {e}"
 
     def display_operations(self, dt):
-        """Muestra los mensajes en el cuadro de texto de la interfaz"""
         messages = self.get_operations_from_api()
-        self.add_message(messages)  # Agregar los mensajes al cuadro de texto
+        self.add_message(messages)  
 
     def open_subscription_page(self, instance):
         import webbrowser
         try:
             session_file = "session_data.json"
-            # Leer el archivo JSON
             with open(session_file, "r") as file:
                 session_data = json.load(file)
 
-            # Extraer el username del archivo
             username = session_data.get("username")
             if not username:
                 print("No se encontró 'username' en session_data.json.")
             else:
-                # URL del endpoint
                 url = f'{ip}/get_logged_in_user'
 
-                # Preparar los datos para enviar
                 data = {"username": username}
 
-                # Realizar la solicitud POST
                 response = requests.post(url, json=data, timeout=30)
 
-                # Procesar la respuesta
                 if response.status_code == 200:
                     response_data = response.json()
                     if response_data["status"] == "success":
-                        # Obtener la URL del Payment Link
                         payment_link_url = response_data["payment_link_url"]
                         print(f"Abriendo Payment Link: {payment_link_url}")
-                        # Abrir el Payment Link en el navegador
                         webbrowser.open(payment_link_url)
                 else:
                     print("Error en la solicitud:", response.status_code)
@@ -791,14 +720,11 @@ class MainScreen(Screen):
         #webbrowser.open("https://buy.stripe.com/test_8wM155dwHafF5IQ5kk")
 
 
-
-
 class RealtimeBotApp(App):
     def build(self):
         Window.size = (Window.width, Window.height)
         sm = ScreenManager()
 
-        # Verificamos si hay una sesión guardada
         if check_session() is not None:
             sm.add_widget(MainScreen(name="main"))
         else:
@@ -811,6 +737,5 @@ class RealtimeBotApp(App):
         sm.add_widget(LoginScreen(name="login"))
         return sm
 
-# Ejecutar la aplicación Kivy
 if __name__ == "__main__":
     RealtimeBotApp().run()
