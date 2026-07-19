@@ -32,6 +32,7 @@ jobs:
           python-version: 3.11.11
           buildozer-cmd: |
             export BUILDOZER_ALLOW_ORG_TEST_DOMAIN=1
+            rm -rf .buildozer/android/platform/build-*/build/venv
             buildozer -v android debug
 
       # 4. Subir el APK generado
