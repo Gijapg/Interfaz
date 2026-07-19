@@ -37,7 +37,7 @@ version = 1.0
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3==3.11.11, hostpython3==3.11.11, kivy, requests, aiohttp==3.11.10
+requirements = python3==3.11,kivy==2.3.0,requests==2.32.3,aiohttp==3.10.5
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -101,7 +101,7 @@ android.api = 33
 android.minapi = 21
 
 # (int) Android SDK version to use
-###android.sdk = 34
+android.sdk = 34
 
 # (str) Android NDK version to use
 android.ndk = 25b
