@@ -9,14 +9,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Forzamos el uso de Java 17, vital para compilar con las últimas APIs de Android
+      # 1. Forzar el uso de Java 17 (necesario para las herramientas modernas de Android)
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # Limpiamos cualquier rastro de compilaciones previas corruptas en GitHub
+      # 2. Gestionar la caché para que las próximas descargas sean más rápidas
       - name: Cache Buildozer Settings
         uses: actions/cache@v4
         with:
@@ -25,17 +25,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildozer-
 
-      # Construir el APK especificando un NDK compatible
+      # 3. Compilar el APK de forma directa
       - name: Build APK
         uses: digreatbrian/buildozer-action@v2
         with:
           python-version: 3.11
           buildozer-cmd: |
             export BUILDOZER_ALLOW_ORG_TEST_DOMAIN=1
-            buildozer android clean
             buildozer -v android debug
 
-      # Subir el APK generado
+      # 4. Subir el APK generado a los artefactos de GitHub
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
