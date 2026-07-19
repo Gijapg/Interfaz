@@ -1,5 +1,4 @@
 name: Build APK
-
 on:
   push:
     branches: [ main ]
@@ -7,20 +6,36 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-
     steps:
       - uses: actions/checkout@v4
 
-      # Paso 1: Construir el APK
+      # Forzamos el uso de Java 17, vital para compilar con las últimas APIs de Android
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # Limpiamos cualquier rastro de compilaciones previas corruptas en GitHub
+      - name: Cache Buildozer Settings
+        uses: actions/cache@v4
+        with:
+          path: .buildozer
+          key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
+          restore-keys: |
+            ${{ runner.os }}-buildozer-
+
+      # Construir el APK especificando un NDK compatible
       - name: Build APK
         uses: digreatbrian/buildozer-action@v2
         with:
           python-version: 3.11
           buildozer-cmd: |
-            export BUILDOZER_ALLOW_ORG_TEST_DOMAIN=1 
+            export BUILDOZER_ALLOW_ORG_TEST_DOMAIN=1
+            buildozer android clean
             buildozer -v android debug
 
-      # Paso 2: Subir el APK sin firmar
+      # Subir el APK generado
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
